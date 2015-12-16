@@ -8,6 +8,7 @@ This is a simple little GTK application that can be used to tune parameters for 
 
 ## New features
 - **New algorithms:** this application supports both the StereoBM and StereoSGBM algorithms
+- **Save and load parameters:** save your settings to a YAML or XML file that can be read by the `read` method of `StereoBM` or `StereoSGBM`. The same file can be used to restore the parameters on the Tuner.
 - **Tooltips:** the parameter labels now display tooltips explaining them. Some of them were taken from the OpenCV documentation, and the ones that are not explained there were taken from somewhere else.
 - **Execution time:** a (not very useful) indicator of the algorithm execution time on the status bar
 - **New Glade file:** the Glade file was recreated from scratch and works with the recent versions of Glade.
@@ -16,7 +17,7 @@ This is a simple little GTK application that can be used to tune parameters for 
 ## Installation
 Make sure you have GTK3.0, GModule2.0 and OpenCV3.0 installed on your system, as well as a C++ compiler. Then, execute the following:
 
-    wget  https://github.com/guimeira/stereo-tuner/releases/download/v0.1/stereo-tuner.tar.gz
+    wget https://github.com/guimeira/stereo-tuner/releases/download/v0.2/stereo-tuner.tar.gz
     tar zxvf stereo-tuner.tar.gz
     cd StereoTuner
     make
@@ -34,10 +35,16 @@ Make sure your images are undistorted and rectified.
 There's a lot of stuff that I'd like to do to improve this application, but I'm not sure if/when I'll have time to do that. Here's a list of new features that could be interesting:
 - Select left and right images on the GUI
 - Use other sources (webcams, video files, etc)
-- Save the parameters in the format that can be loaded by the `read` method of `StereoBM` and `StereoSGBM`
-- Read parameters in that same format
+- **[Done!]** Save the parameters in the format that can be loaded by the `read` method of `StereoBM` and `StereoSGBM`
+- **[Done!]** Read parameters in that same format
 - Binary releases (.deb, .rpm, maybe even Windows)
+- Do the heavy processing on a separate thread to avoid freezing the interface
+- Refactor code to avoid repetitions
 - Add support for other stereo-related stuff such as camera calibration, rectification, undistortion, etc, and then give this application some fancy name
 
 ## Bugs, issues, new features
 Please, feel free to open an issue if you find a bug or you have a feature request. You can also fork this project and submit a pull request.
+
+## Changelog
+- **v0.2:** Added load and save features.
+- **v0.1:** First version.
