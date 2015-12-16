@@ -26,7 +26,7 @@ struct ChData {
 	GtkWidget *sc_block_size, *sc_min_disparity, *sc_num_disparities,
 		*sc_disp_max_diff, *sc_speckle_range, *sc_speckle_window_size,
 		*sc_p1, *sc_p2, *sc_pre_filter_cap, *sc_pre_filter_size,
-		*sc_uniqueness_ratio, *sc_texture_threshold, *sc_smaller_block_size,
+		*sc_uniqueness_ratio, *sc_texture_threshold,
 		*rb_pre_filter_normalized, *rb_pre_filter_xsobel, *chk_full_dp;
 	GtkWidget *status_bar;
 	gint status_bar_context;
@@ -45,7 +45,6 @@ struct ChData {
 	int pre_filter_cap;
 	int pre_filter_size;
 	int pre_filter_type;
-	int smaller_block_size;
 	int texture_threshold;
 	int uniqueness_ratio;
 	int p1;
@@ -63,7 +62,6 @@ struct ChData {
 	static const int DEFAULT_PRE_FILTER_SIZE = 5;
 	static const int DEFAULT_PRE_FILTER_TYPE =
 			StereoBM::PREFILTER_NORMALIZED_RESPONSE;
-	static const int DEFAULT_SMALLER_BLOCK_SIZE = 5;
 	static const int DEFAULT_TEXTURE_THRESHOLD = 0;
 	static const int DEFAULT_UNIQUENESS_RATIO = 0;
 	static const int DEFAULT_P1 = 0;
@@ -74,7 +72,7 @@ struct ChData {
 			num_disparities(DEFAULT_NUM_DISPARITIES), speckle_range(DEFAULT_SPECKLE_RANGE),
 			speckle_window_size(DEFAULT_SPECKLE_WINDOW_SIZE), pre_filter_cap(DEFAULT_PRE_FILTER_CAP),
 			pre_filter_size(DEFAULT_PRE_FILTER_SIZE), pre_filter_type(DEFAULT_PRE_FILTER_TYPE),
-			smaller_block_size(DEFAULT_SMALLER_BLOCK_SIZE), texture_threshold(DEFAULT_TEXTURE_THRESHOLD),
+			texture_threshold(DEFAULT_TEXTURE_THRESHOLD),
 			uniqueness_ratio(DEFAULT_UNIQUENESS_RATIO), p1(DEFAULT_P1), p2(DEFAULT_P2),
 			mode(DEFAULT_MODE)
 		{}
@@ -102,7 +100,6 @@ void update_matcher(ChData *data) {
 		stereo_bm->setPreFilterCap(data->pre_filter_cap);
 		stereo_bm->setPreFilterSize(data->pre_filter_size);
 		stereo_bm->setPreFilterType(data->pre_filter_type);
-		stereo_bm->setSmallerBlockSize(data->smaller_block_size);
 		stereo_bm->setTextureThreshold(data->texture_threshold);
 		stereo_bm->setUniquenessRatio(data->uniqueness_ratio);
 
@@ -118,7 +115,6 @@ void update_matcher(ChData *data) {
 		gtk_widget_set_sensitive(data->sc_pre_filter_size, true);
 		gtk_widget_set_sensitive(data->sc_uniqueness_ratio, true);
 		gtk_widget_set_sensitive(data->sc_texture_threshold, true);
-		gtk_widget_set_sensitive(data->sc_smaller_block_size, true);
 		gtk_widget_set_sensitive(data->rb_pre_filter_normalized, true);
 		gtk_widget_set_sensitive(data->rb_pre_filter_xsobel, true);
 		gtk_widget_set_sensitive(data->chk_full_dp, false);
@@ -164,7 +160,6 @@ void update_matcher(ChData *data) {
 		gtk_widget_set_sensitive(data->sc_pre_filter_size, false);
 		gtk_widget_set_sensitive(data->sc_uniqueness_ratio, true);
 		gtk_widget_set_sensitive(data->sc_texture_threshold, false);
-		gtk_widget_set_sensitive(data->sc_smaller_block_size, false);
 		gtk_widget_set_sensitive(data->rb_pre_filter_normalized, false);
 		gtk_widget_set_sensitive(data->rb_pre_filter_xsobel, false);
 		gtk_widget_set_sensitive(data->chk_full_dp, true);
@@ -411,37 +406,6 @@ G_MODULE_EXPORT void on_adj_texture_threshold_value_changed( GtkAdjustment *adju
 }
 
 extern "C"
-G_MODULE_EXPORT void on_adj_smaller_block_size_value_changed(GtkAdjustment *adjustment,
-		ChData *data) {
-	gint value;
-
-	if (data == NULL) {
-		fprintf(stderr, "WARNING: data is null\n");
-		return;
-	}
-
-	value = (gint) gtk_adjustment_get_value(adjustment);
-
-	//the value must be odd, if it is not then set it to the next odd value
-	if (value % 2 == 0) {
-		value += 1;
-		gtk_adjustment_set_value(adjustment, (gdouble) value);
-		return;
-	}
-
-	//the value must be smaller than the image size
-	if (value >= data->cv_image_left.cols
-			|| value >= data->cv_image_left.rows) {
-		fprintf(stderr, "WARNING: Block size is larger than image size\n");
-		return;
-	}
-
-	//set the parameter,
-	data->smaller_block_size = value;
-	update_matcher(data);
-}
-
-extern "C"
 G_MODULE_EXPORT void on_algo_ssgbm_clicked(GtkButton *b, ChData *data) {
 	if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(b))) {
 		data->matcher_type = SGBM;
@@ -481,6 +445,89 @@ G_MODULE_EXPORT void on_chk_full_dp_clicked(GtkButton *b, ChData *data) {
 		data->mode = StereoSGBM::MODE_HH;
 	}
 	update_matcher(data);
+}
+
+extern "C"
+G_MODULE_EXPORT void on_btn_save_clicked(GtkButton *b, ChData *data) {
+	GtkWidget *dialog;
+	GtkFileChooser *chooser;
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+	gint res;
+
+	dialog = gtk_file_chooser_dialog_new("Save File", GTK_WINDOW(data->main_window), action, "Cancel", GTK_RESPONSE_CANCEL, "Save", GTK_RESPONSE_ACCEPT, NULL);
+	chooser = GTK_FILE_CHOOSER(dialog);
+	gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
+	gtk_file_chooser_set_current_name(chooser, "params.yml");
+
+	GtkFileFilter *filter_yml = gtk_file_filter_new();
+	gtk_file_filter_set_name(filter_yml,"YAML file (*.yml)");
+	gtk_file_filter_add_pattern(filter_yml,"*.yml");
+
+	GtkFileFilter *filter_xml = gtk_file_filter_new();
+	gtk_file_filter_set_name(filter_xml, "XML file(*.xml)");
+	gtk_file_filter_add_pattern(filter_xml,"*.xml");
+
+	gtk_file_chooser_add_filter(chooser,filter_yml);
+	gtk_file_chooser_add_filter(chooser,filter_xml);
+
+	res = gtk_dialog_run(GTK_DIALOG(dialog));
+
+	if(res == GTK_RESPONSE_ACCEPT) {
+		char *filename;
+		filename = gtk_file_chooser_get_filename(chooser);
+		int len = strlen(filename);
+
+		if(!strcmp(filename+len-4,".yml") || !strcmp(filename+len-4,".xml")) {
+			FileStorage fs(filename, FileStorage::WRITE);
+
+			switch(data->matcher_type) {
+			case BM:
+				fs <<
+				"name" << "StereoMatcher.BM" <<
+				"blockSize" << data->block_size <<
+				"minDisparity" << data->min_disparity <<
+				"numDisparities" << data->num_disparities <<
+				"disp12MaxDiff" << data->disp_12_max_diff <<
+				"speckleRange" << data->speckle_range <<
+				"speckleWindowSize" << data->speckle_window_size <<
+				"preFilterCap" << data->pre_filter_cap <<
+				"preFilterSize" << data->pre_filter_size <<
+				"uniquenessRatio" << data->uniqueness_ratio <<
+				"textureThreshold" << data->texture_threshold <<
+				"preFilterType" << data->pre_filter_type;
+				break;
+
+			case SGBM:
+				fs <<
+				"name" << "StereoMatcher.SGBM" <<
+				"blockSize" << data->block_size <<
+				"minDisparity" << data->min_disparity <<
+				"numDisparities" << data->num_disparities <<
+				"disp12MaxDiff" << data->disp_12_max_diff <<
+				"speckleRange" << data->speckle_range <<
+				"speckleWindowSize" << data->speckle_window_size <<
+				"P1" << data->p1 <<
+				"P2" << data->p2 <<
+				"preFilterCap" << data->pre_filter_cap <<
+				"uniquenessRatio" << data->uniqueness_ratio <<
+				"mode" << data->mode;
+				break;
+			}
+			fs.release();
+
+			GtkWidget *message = gtk_message_dialog_new(GTK_WINDOW(data->main_window), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE, "Parameters saved successfully");
+			gtk_dialog_run(GTK_DIALOG(message));
+			gtk_widget_destroy(GTK_WIDGET(message));
+		} else {
+			GtkWidget *message = gtk_message_dialog_new(GTK_WINDOW(data->main_window), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Currently the only supported formats are XML and YAML.");
+			gtk_dialog_run(GTK_DIALOG(message));
+			gtk_widget_destroy(GTK_WIDGET(message));
+		}
+
+		g_free(filename);
+	}
+
+	gtk_widget_destroy(dialog);
 }
 
 int main(int argc, char *argv[]) {
@@ -546,7 +593,6 @@ int main(int argc, char *argv[]) {
 	data->sc_pre_filter_size = GTK_WIDGET(gtk_builder_get_object(builder, "sc_pre_filter_size"));
 	data->sc_uniqueness_ratio = GTK_WIDGET(gtk_builder_get_object(builder, "sc_uniqueness_ratio"));
 	data->sc_texture_threshold = GTK_WIDGET(gtk_builder_get_object(builder, "sc_texture_threshold"));
-	data->sc_smaller_block_size = GTK_WIDGET(gtk_builder_get_object(builder, "sc_smaller_block_size"));
 	data->rb_pre_filter_normalized = GTK_WIDGET(gtk_builder_get_object(builder, "rb_pre_filter_normalized"));
 	data->rb_pre_filter_xsobel = GTK_WIDGET(gtk_builder_get_object(builder, "rb_pre_filter_xsobel"));
 	data->chk_full_dp = GTK_WIDGET(gtk_builder_get_object(builder, "chk_full_dp"));
