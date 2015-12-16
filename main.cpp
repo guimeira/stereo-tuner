@@ -23,11 +23,16 @@ struct ChData {
 	GtkImage *image_left;
 	GtkImage *image_right;
 	GtkImage *image_depth;
+	GtkWidget *rb_bm, *rb_sgbm;
 	GtkWidget *sc_block_size, *sc_min_disparity, *sc_num_disparities,
 		*sc_disp_max_diff, *sc_speckle_range, *sc_speckle_window_size,
 		*sc_p1, *sc_p2, *sc_pre_filter_cap, *sc_pre_filter_size,
 		*sc_uniqueness_ratio, *sc_texture_threshold,
 		*rb_pre_filter_normalized, *rb_pre_filter_xsobel, *chk_full_dp;
+	GtkAdjustment *adj_block_size, *adj_min_disparity, *adj_num_disparities,
+	*adj_disp_max_diff, *adj_speckle_range, *adj_speckle_window_size,
+	*adj_p1, *adj_p2, *adj_pre_filter_cap, *adj_pre_filter_size,
+	*adj_uniqueness_ratio, *adj_texture_threshold;
 	GtkWidget *status_bar;
 	gint status_bar_context;
 
@@ -89,6 +94,22 @@ void update_matcher(ChData *data) {
 		//If we have the wrong type of matcher, let's create a new one:
 		if (!stereo_bm) {
 			data->stereo_matcher = stereo_bm = StereoBM::create(16, 1);
+
+			gtk_widget_set_sensitive(data->sc_block_size, true);
+			gtk_widget_set_sensitive(data->sc_min_disparity, true);
+			gtk_widget_set_sensitive(data->sc_num_disparities, true);
+			gtk_widget_set_sensitive(data->sc_disp_max_diff, true);
+			gtk_widget_set_sensitive(data->sc_speckle_range, true);
+			gtk_widget_set_sensitive(data->sc_speckle_window_size, true);
+			gtk_widget_set_sensitive(data->sc_p1, false);
+			gtk_widget_set_sensitive(data->sc_p2, false);
+			gtk_widget_set_sensitive(data->sc_pre_filter_cap, true);
+			gtk_widget_set_sensitive(data->sc_pre_filter_size, true);
+			gtk_widget_set_sensitive(data->sc_uniqueness_ratio, true);
+			gtk_widget_set_sensitive(data->sc_texture_threshold, true);
+			gtk_widget_set_sensitive(data->rb_pre_filter_normalized, true);
+			gtk_widget_set_sensitive(data->rb_pre_filter_xsobel, true);
+			gtk_widget_set_sensitive(data->chk_full_dp, false);
 		}
 
 		stereo_bm->setBlockSize(data->block_size);
@@ -102,22 +123,6 @@ void update_matcher(ChData *data) {
 		stereo_bm->setPreFilterType(data->pre_filter_type);
 		stereo_bm->setTextureThreshold(data->texture_threshold);
 		stereo_bm->setUniquenessRatio(data->uniqueness_ratio);
-
-		gtk_widget_set_sensitive(data->sc_block_size, true);
-		gtk_widget_set_sensitive(data->sc_min_disparity, true);
-		gtk_widget_set_sensitive(data->sc_num_disparities, true);
-		gtk_widget_set_sensitive(data->sc_disp_max_diff, true);
-		gtk_widget_set_sensitive(data->sc_speckle_range, true);
-		gtk_widget_set_sensitive(data->sc_speckle_window_size, true);
-		gtk_widget_set_sensitive(data->sc_p1, false);
-		gtk_widget_set_sensitive(data->sc_p2, false);
-		gtk_widget_set_sensitive(data->sc_pre_filter_cap, true);
-		gtk_widget_set_sensitive(data->sc_pre_filter_size, true);
-		gtk_widget_set_sensitive(data->sc_uniqueness_ratio, true);
-		gtk_widget_set_sensitive(data->sc_texture_threshold, true);
-		gtk_widget_set_sensitive(data->rb_pre_filter_normalized, true);
-		gtk_widget_set_sensitive(data->rb_pre_filter_xsobel, true);
-		gtk_widget_set_sensitive(data->chk_full_dp, false);
 		break;
 
 	case SGBM:
@@ -134,6 +139,22 @@ void update_matcher(ChData *data) {
 					ChData::DEFAULT_UNIQUENESS_RATIO,
 					ChData::DEFAULT_SPECKLE_WINDOW_SIZE,
 					ChData::DEFAULT_SPECKLE_RANGE, ChData::DEFAULT_MODE);
+
+			gtk_widget_set_sensitive(data->sc_block_size, true);
+			gtk_widget_set_sensitive(data->sc_min_disparity, true);
+			gtk_widget_set_sensitive(data->sc_num_disparities, true);
+			gtk_widget_set_sensitive(data->sc_disp_max_diff, true);
+			gtk_widget_set_sensitive(data->sc_speckle_range, true);
+			gtk_widget_set_sensitive(data->sc_speckle_window_size, true);
+			gtk_widget_set_sensitive(data->sc_p1, true);
+			gtk_widget_set_sensitive(data->sc_p2, true);
+			gtk_widget_set_sensitive(data->sc_pre_filter_cap, true);
+			gtk_widget_set_sensitive(data->sc_pre_filter_size, false);
+			gtk_widget_set_sensitive(data->sc_uniqueness_ratio, true);
+			gtk_widget_set_sensitive(data->sc_texture_threshold, false);
+			gtk_widget_set_sensitive(data->rb_pre_filter_normalized, false);
+			gtk_widget_set_sensitive(data->rb_pre_filter_xsobel, false);
+			gtk_widget_set_sensitive(data->chk_full_dp, true);
 		}
 
 		stereo_sgbm->setBlockSize(data->block_size);
@@ -148,21 +169,6 @@ void update_matcher(ChData *data) {
 		stereo_sgbm->setSpeckleWindowSize(data->speckle_window_size);
 		stereo_sgbm->setUniquenessRatio(data->uniqueness_ratio);
 
-		gtk_widget_set_sensitive(data->sc_block_size, true);
-		gtk_widget_set_sensitive(data->sc_min_disparity, true);
-		gtk_widget_set_sensitive(data->sc_num_disparities, true);
-		gtk_widget_set_sensitive(data->sc_disp_max_diff, true);
-		gtk_widget_set_sensitive(data->sc_speckle_range, true);
-		gtk_widget_set_sensitive(data->sc_speckle_window_size, true);
-		gtk_widget_set_sensitive(data->sc_p1, true);
-		gtk_widget_set_sensitive(data->sc_p2, true);
-		gtk_widget_set_sensitive(data->sc_pre_filter_cap, true);
-		gtk_widget_set_sensitive(data->sc_pre_filter_size, false);
-		gtk_widget_set_sensitive(data->sc_uniqueness_ratio, true);
-		gtk_widget_set_sensitive(data->sc_texture_threshold, false);
-		gtk_widget_set_sensitive(data->rb_pre_filter_normalized, false);
-		gtk_widget_set_sensitive(data->rb_pre_filter_xsobel, false);
-		gtk_widget_set_sensitive(data->chk_full_dp, true);
 		break;
 	}
 
@@ -189,7 +195,35 @@ void update_matcher(ChData *data) {
 	gtk_image_set_from_pixbuf(data->image_depth, pixbuf);
 }
 
-extern "C"
+void update_interface(ChData *data) {
+	if(data->matcher_type == BM) {
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(data->rb_bm),true);
+	} else {
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(data->rb_sgbm),true);
+	}
+
+	gtk_adjustment_set_value(data->adj_block_size,data->block_size);
+	gtk_adjustment_set_value(data->adj_min_disparity,data->min_disparity);
+	gtk_adjustment_set_value(data->adj_num_disparities,data->num_disparities);
+	gtk_adjustment_set_value(data->adj_disp_max_diff,data->disp_12_max_diff);
+	gtk_adjustment_set_value(data->adj_speckle_range,data->speckle_range);
+	gtk_adjustment_set_value(data->adj_speckle_window_size,data->speckle_window_size);
+	gtk_adjustment_set_value(data->adj_p1,data->p1);
+	gtk_adjustment_set_value(data->adj_p2,data->p2);
+	gtk_adjustment_set_value(data->adj_pre_filter_cap,data->pre_filter_cap);
+	gtk_adjustment_set_value(data->adj_pre_filter_size,data->pre_filter_size);
+	gtk_adjustment_set_value(data->adj_uniqueness_ratio,data->uniqueness_ratio);
+	gtk_adjustment_set_value(data->adj_texture_threshold,data->texture_threshold);
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(data->chk_full_dp),data->mode == StereoSGBM::MODE_HH);
+
+	if(data->pre_filter_type == StereoBM::PREFILTER_NORMALIZED_RESPONSE) {
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(data->rb_pre_filter_normalized),true);
+	} else {
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(data->rb_pre_filter_xsobel),true);
+	}
+}
+
+extern "C" {
 G_MODULE_EXPORT void on_adj_block_size_value_changed(GtkAdjustment *adjustment,
 		ChData *data) {
 	gint value;
@@ -220,7 +254,6 @@ G_MODULE_EXPORT void on_adj_block_size_value_changed(GtkAdjustment *adjustment,
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_adj_min_disparity_value_changed(
 		GtkAdjustment *adjustment, ChData *data) {
 	gint value;
@@ -236,7 +269,6 @@ G_MODULE_EXPORT void on_adj_min_disparity_value_changed(
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_adj_num_disparities_value_changed( GtkAdjustment *adjustment, ChData *data ) {
 	gint value;
 
@@ -259,7 +291,6 @@ G_MODULE_EXPORT void on_adj_num_disparities_value_changed( GtkAdjustment *adjust
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_adj_disp_max_diff_value_changed(
 		GtkAdjustment *adjustment, ChData *data) {
 	gint value;
@@ -275,7 +306,6 @@ G_MODULE_EXPORT void on_adj_disp_max_diff_value_changed(
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_adj_speckle_range_value_changed( GtkAdjustment *adjustment, ChData *data ) {
 	gint value;
 
@@ -290,7 +320,6 @@ G_MODULE_EXPORT void on_adj_speckle_range_value_changed( GtkAdjustment *adjustme
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_adj_speckle_window_size_value_changed( GtkAdjustment *adjustment, ChData *data ) {
 	gint value;
 
@@ -305,7 +334,6 @@ G_MODULE_EXPORT void on_adj_speckle_window_size_value_changed( GtkAdjustment *ad
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_adj_p1_value_changed( GtkAdjustment *adjustment, ChData *data ) {
 	gint value;
 
@@ -320,7 +348,6 @@ G_MODULE_EXPORT void on_adj_p1_value_changed( GtkAdjustment *adjustment, ChData 
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_adj_p2_value_changed( GtkAdjustment *adjustment, ChData *data ) {
 	gint value;
 
@@ -335,7 +362,6 @@ G_MODULE_EXPORT void on_adj_p2_value_changed( GtkAdjustment *adjustment, ChData 
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_adj_pre_filter_cap_value_changed( GtkAdjustment *adjustment, ChData *data ) {
 	gint value;
 
@@ -351,7 +377,6 @@ G_MODULE_EXPORT void on_adj_pre_filter_cap_value_changed( GtkAdjustment *adjustm
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_adj_pre_filter_size_value_changed( GtkAdjustment *adjustment, ChData *data ) {
 	gint value;
 
@@ -375,7 +400,6 @@ G_MODULE_EXPORT void on_adj_pre_filter_size_value_changed( GtkAdjustment *adjust
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_adj_uniqueness_ratio_value_changed( GtkAdjustment *adjustment, ChData *data ) {
 	gint value;
 
@@ -390,7 +414,6 @@ G_MODULE_EXPORT void on_adj_uniqueness_ratio_value_changed( GtkAdjustment *adjus
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_adj_texture_threshold_value_changed( GtkAdjustment *adjustment, ChData *data ) {
 	gint value;
 
@@ -405,7 +428,6 @@ G_MODULE_EXPORT void on_adj_texture_threshold_value_changed( GtkAdjustment *adju
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_algo_ssgbm_clicked(GtkButton *b, ChData *data) {
 	if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(b))) {
 		data->matcher_type = SGBM;
@@ -413,7 +435,6 @@ G_MODULE_EXPORT void on_algo_ssgbm_clicked(GtkButton *b, ChData *data) {
 	}
 }
 
-extern "C"
 G_MODULE_EXPORT void on_algo_sbm_clicked(GtkButton *b, ChData *data) {
 	if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(b))) {
 		data->matcher_type = BM;
@@ -421,7 +442,6 @@ G_MODULE_EXPORT void on_algo_sbm_clicked(GtkButton *b, ChData *data) {
 	}
 }
 
-extern "C"
 G_MODULE_EXPORT void on_rb_pre_filter_normalized_clicked(GtkButton *b, ChData *data) {
 	if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(b))) {
 		data->pre_filter_type = StereoBM::PREFILTER_NORMALIZED_RESPONSE;
@@ -429,7 +449,6 @@ G_MODULE_EXPORT void on_rb_pre_filter_normalized_clicked(GtkButton *b, ChData *d
 	}
 }
 
-extern "C"
 G_MODULE_EXPORT void on_rb_pre_filter_xsobel_clicked(GtkButton *b, ChData *data) {
 	if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(b))) {
 		data->pre_filter_type = StereoBM::PREFILTER_XSOBEL;
@@ -437,17 +456,15 @@ G_MODULE_EXPORT void on_rb_pre_filter_xsobel_clicked(GtkButton *b, ChData *data)
 	}
 }
 
-extern "C"
 G_MODULE_EXPORT void on_chk_full_dp_clicked(GtkButton *b, ChData *data) {
 	if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(b))) {
-		data->mode = StereoSGBM::MODE_SGBM;
-	} else {
 		data->mode = StereoSGBM::MODE_HH;
+	} else {
+		data->mode = StereoSGBM::MODE_SGBM;
 	}
 	update_matcher(data);
 }
 
-extern "C"
 G_MODULE_EXPORT void on_btn_save_clicked(GtkButton *b, ChData *data) {
 	GtkWidget *dialog;
 	GtkFileChooser *chooser;
@@ -471,10 +488,11 @@ G_MODULE_EXPORT void on_btn_save_clicked(GtkButton *b, ChData *data) {
 	gtk_file_chooser_add_filter(chooser,filter_xml);
 
 	res = gtk_dialog_run(GTK_DIALOG(dialog));
+	char *filename;
+	filename = gtk_file_chooser_get_filename(chooser);
+	gtk_widget_destroy(GTK_WIDGET(dialog));
 
 	if(res == GTK_RESPONSE_ACCEPT) {
-		char *filename;
-		filename = gtk_file_chooser_get_filename(chooser);
 		int len = strlen(filename);
 
 		if(!strcmp(filename+len-4,".yml") || !strcmp(filename+len-4,".xml")) {
@@ -526,8 +544,98 @@ G_MODULE_EXPORT void on_btn_save_clicked(GtkButton *b, ChData *data) {
 
 		g_free(filename);
 	}
+}
 
-	gtk_widget_destroy(dialog);
+G_MODULE_EXPORT void on_btn_load_clicked(GtkButton *b, ChData *data) {
+	GtkWidget *dialog;
+	GtkFileChooser *chooser;
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+	gint res;
+
+	dialog = gtk_file_chooser_dialog_new("Open File", GTK_WINDOW(data->main_window), action, "Cancel", GTK_RESPONSE_CANCEL, "Open", GTK_RESPONSE_ACCEPT, NULL);
+	chooser = GTK_FILE_CHOOSER(dialog);
+
+	GtkFileFilter *filter = gtk_file_filter_new();
+	gtk_file_filter_set_name(filter,"YAML or XML file (*.yml, *.xml)");
+	gtk_file_filter_add_pattern(filter,"*.yml");
+	gtk_file_filter_add_pattern(filter,"*.xml");
+
+	gtk_file_chooser_add_filter(chooser,filter);
+
+	res = gtk_dialog_run(GTK_DIALOG(dialog));
+	char *filename;
+	filename = gtk_file_chooser_get_filename(chooser);
+	gtk_widget_destroy(GTK_WIDGET(dialog));
+
+	if(res == GTK_RESPONSE_ACCEPT) {
+		int len = strlen(filename);
+
+		if(!strcmp(filename+len-4,".yml") || !strcmp(filename+len-4,".xml")) {
+			FileStorage fs(filename, FileStorage::READ);
+
+			if(!fs.isOpened()) {
+				GtkWidget *message = gtk_message_dialog_new(GTK_WINDOW(data->main_window), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Could not open the selected file.");
+				gtk_dialog_run(GTK_DIALOG(message));
+				gtk_widget_destroy(GTK_WIDGET(message));
+			} else {
+				string name;
+				fs["name"] >> name;
+
+				if(name == "StereoMatcher.BM") {
+					data->matcher_type = BM;
+					fs["blockSize"] >> data->block_size;
+					fs["minDisparity"] >> data->min_disparity;
+					fs["numDisparities"] >> data->num_disparities;
+					fs["disp12MaxDiff"] >> data->disp_12_max_diff;
+					fs["speckleRange"] >> data->speckle_range;
+					fs["speckleWindowSize"] >> data->speckle_window_size;
+					fs["preFilterCap"] >> data->pre_filter_cap;
+					fs["preFilterSize"] >> data->pre_filter_size;
+					fs["uniquenessRatio"] >> data->uniqueness_ratio;
+					fs["textureThreshold"] >> data->texture_threshold;
+					fs["preFilterType"] >> data->pre_filter_type;
+					update_interface(data);
+					update_matcher(data);
+
+					GtkWidget *message = gtk_message_dialog_new(GTK_WINDOW(data->main_window), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Parameters loaded successfully.");
+					gtk_dialog_run(GTK_DIALOG(message));
+					gtk_widget_destroy(GTK_WIDGET(message));
+				} else if(name == "StereoMatcher.SGBM") {
+					data->matcher_type = SGBM;
+					fs["blockSize"] >> data->block_size;
+					fs["minDisparity"] >> data->min_disparity;
+					fs["numDisparities"] >> data->num_disparities;
+					fs["disp12MaxDiff"] >> data->disp_12_max_diff;
+					fs["speckleRange"] >> data->speckle_range;
+					fs["speckleWindowSize"] >> data->speckle_window_size;
+					fs["P1"] >> data->p1;
+					fs["P2"] >> data->p2;
+					fs["preFilterCap"] >> data->pre_filter_cap;
+					fs["uniquenessRatio"] >> data->uniqueness_ratio;
+					fs["mode"] >> data->mode;
+					update_interface(data);
+					update_matcher(data);
+
+					GtkWidget *message = gtk_message_dialog_new(GTK_WINDOW(data->main_window), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE, "Parameters loaded successfully.");
+					gtk_dialog_run(GTK_DIALOG(message));
+					gtk_widget_destroy(GTK_WIDGET(message));
+				} else {
+					GtkWidget *message = gtk_message_dialog_new(GTK_WINDOW(data->main_window), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "This file is not valid.");
+					gtk_dialog_run(GTK_DIALOG(message));
+					gtk_widget_destroy(GTK_WIDGET(message));
+				}
+
+				fs.release();
+			}
+		} else {
+			GtkWidget *message = gtk_message_dialog_new(GTK_WINDOW(data->main_window), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Currently the only supported formats are XML and YAML.");
+			gtk_dialog_run(GTK_DIALOG(message));
+			gtk_widget_destroy(GTK_WIDGET(message));
+		}
+
+		g_free(filename);
+	}
+}
 }
 
 int main(int argc, char *argv[]) {
@@ -597,6 +705,20 @@ int main(int argc, char *argv[]) {
 	data->rb_pre_filter_xsobel = GTK_WIDGET(gtk_builder_get_object(builder, "rb_pre_filter_xsobel"));
 	data->chk_full_dp = GTK_WIDGET(gtk_builder_get_object(builder, "chk_full_dp"));
 	data->status_bar = GTK_WIDGET(gtk_builder_get_object(builder, "status_bar"));
+	data->rb_bm = GTK_WIDGET(gtk_builder_get_object(builder, "algo_sbm"));
+	data->rb_sgbm = GTK_WIDGET(gtk_builder_get_object(builder, "algo_ssgbm"));
+	data->adj_block_size = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_block_size"));
+	data->adj_min_disparity = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_min_disparity"));
+	data->adj_num_disparities = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_num_disparities"));
+	data->adj_disp_max_diff = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_disp_max_diff"));
+	data->adj_speckle_range = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_speckle_range"));
+	data->adj_speckle_window_size = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_speckle_window_size"));
+	data->adj_p1 = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_p1"));
+	data->adj_p2 = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_p2"));
+	data->adj_pre_filter_cap = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_pre_filter_cap"));
+	data->adj_pre_filter_size = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_pre_filter_size"));
+	data->adj_uniqueness_ratio = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_uniqueness_ratio"));
+	data->adj_texture_threshold = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_texture_threshold"));
 	data->status_bar_context = gtk_statusbar_get_context_id(GTK_STATUSBAR(data->status_bar), "Statusbar context");
 
 	//Put images on place
