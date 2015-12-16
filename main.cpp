@@ -56,6 +56,8 @@ struct ChData {
 	int p2;
 	int mode;
 
+	bool live_update;
+
 	/* Defalt values */
 	static const int DEFAULT_BLOCK_SIZE = 5;
 	static const int DEFAULT_DISP_12_MAX_DIFF = -1;
@@ -73,17 +75,21 @@ struct ChData {
 	static const int DEFAULT_P2 = 0;
 	static const int DEFAULT_MODE = StereoSGBM::MODE_SGBM;
 
-	ChData() : matcher_type(BM), block_size(DEFAULT_BLOCK_SIZE), min_disparity(DEFAULT_MIN_DISPARITY),
+	ChData() : matcher_type(BM), block_size(DEFAULT_BLOCK_SIZE), disp_12_max_diff(DEFAULT_DISP_12_MAX_DIFF), min_disparity(DEFAULT_MIN_DISPARITY),
 			num_disparities(DEFAULT_NUM_DISPARITIES), speckle_range(DEFAULT_SPECKLE_RANGE),
 			speckle_window_size(DEFAULT_SPECKLE_WINDOW_SIZE), pre_filter_cap(DEFAULT_PRE_FILTER_CAP),
 			pre_filter_size(DEFAULT_PRE_FILTER_SIZE), pre_filter_type(DEFAULT_PRE_FILTER_TYPE),
 			texture_threshold(DEFAULT_TEXTURE_THRESHOLD),
 			uniqueness_ratio(DEFAULT_UNIQUENESS_RATIO), p1(DEFAULT_P1), p2(DEFAULT_P2),
-			mode(DEFAULT_MODE)
+			mode(DEFAULT_MODE), live_update(true)
 		{}
 };
 
 void update_matcher(ChData *data) {
+	if(!data->live_update) {
+		return;
+	}
+
 	Ptr<StereoBM> stereo_bm;
 	Ptr<StereoSGBM> stereo_sgbm;
 
@@ -196,6 +202,9 @@ void update_matcher(ChData *data) {
 }
 
 void update_interface(ChData *data) {
+	//Avoids rebuilding the matcher on every change:
+	data->live_update = false;
+
 	if(data->matcher_type == BM) {
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(data->rb_bm),true);
 	} else {
@@ -221,6 +230,9 @@ void update_interface(ChData *data) {
 	} else {
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(data->rb_pre_filter_xsobel),true);
 	}
+
+	data->live_update = true;
+	update_matcher(data);
 }
 
 extern "C" {
@@ -595,7 +607,6 @@ G_MODULE_EXPORT void on_btn_load_clicked(GtkButton *b, ChData *data) {
 					fs["textureThreshold"] >> data->texture_threshold;
 					fs["preFilterType"] >> data->pre_filter_type;
 					update_interface(data);
-					update_matcher(data);
 
 					GtkWidget *message = gtk_message_dialog_new(GTK_WINDOW(data->main_window), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Parameters loaded successfully.");
 					gtk_dialog_run(GTK_DIALOG(message));
@@ -614,7 +625,6 @@ G_MODULE_EXPORT void on_btn_load_clicked(GtkButton *b, ChData *data) {
 					fs["uniquenessRatio"] >> data->uniqueness_ratio;
 					fs["mode"] >> data->mode;
 					update_interface(data);
-					update_matcher(data);
 
 					GtkWidget *message = gtk_message_dialog_new(GTK_WINDOW(data->main_window), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE, "Parameters loaded successfully.");
 					gtk_dialog_run(GTK_DIALOG(message));
@@ -635,6 +645,25 @@ G_MODULE_EXPORT void on_btn_load_clicked(GtkButton *b, ChData *data) {
 
 		g_free(filename);
 	}
+}
+
+G_MODULE_EXPORT void on_btn_defaults_clicked(GtkButton *b, ChData *data) {
+	data->matcher_type = BM;
+	data->block_size = ChData::DEFAULT_BLOCK_SIZE;
+	data->disp_12_max_diff = ChData::DEFAULT_DISP_12_MAX_DIFF;
+	data->min_disparity = ChData::DEFAULT_MIN_DISPARITY;
+	data->num_disparities = ChData::DEFAULT_NUM_DISPARITIES;
+	data->speckle_range = ChData::DEFAULT_SPECKLE_RANGE;
+	data->speckle_window_size = ChData::DEFAULT_SPECKLE_WINDOW_SIZE;
+	data->pre_filter_cap = ChData::DEFAULT_PRE_FILTER_CAP;
+	data->pre_filter_size = ChData::DEFAULT_PRE_FILTER_SIZE;
+	data->pre_filter_type = ChData::DEFAULT_PRE_FILTER_TYPE;
+	data->texture_threshold = ChData::DEFAULT_TEXTURE_THRESHOLD;
+	data->uniqueness_ratio = ChData::DEFAULT_UNIQUENESS_RATIO;
+	data->p1 = ChData::DEFAULT_P1;
+	data->p2 = ChData::DEFAULT_P2;
+	data->mode = ChData::DEFAULT_MODE;
+	update_interface(data);
 }
 }
 

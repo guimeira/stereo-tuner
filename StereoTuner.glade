@@ -628,7 +628,7 @@
                     <property name="homogeneous">True</property>
                     <child>
                       <object class="GtkButton" id="btn_save">
-                        <property name="label" translatable="yes">Save parameters</property>
+                        <property name="label" translatable="yes">Save params</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -642,7 +642,7 @@
                     </child>
                     <child>
                       <object class="GtkButton" id="btn_load">
-                        <property name="label" translatable="yes">Load parameters</property>
+                        <property name="label" translatable="yes">Load params</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -652,6 +652,20 @@
                         <property name="expand">False</property>
                         <property name="fill">False</property>
                         <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="btn_defaults">
+                        <property name="label" translatable="yes">Defaults</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <signal name="clicked" handler="on_btn_defaults_clicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">2</property>
                       </packing>
                     </child>
                   </object>
