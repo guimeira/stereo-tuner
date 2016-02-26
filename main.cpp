@@ -56,6 +56,8 @@ struct ChData {
 	int p2;
 	int mode;
 
+	Rect *roi1, *roi2;
+
 	bool live_update;
 
 	/* Defalt values */
@@ -81,7 +83,7 @@ struct ChData {
 			pre_filter_size(DEFAULT_PRE_FILTER_SIZE), pre_filter_type(DEFAULT_PRE_FILTER_TYPE),
 			texture_threshold(DEFAULT_TEXTURE_THRESHOLD),
 			uniqueness_ratio(DEFAULT_UNIQUENESS_RATIO), p1(DEFAULT_P1), p2(DEFAULT_P2),
-			mode(DEFAULT_MODE), live_update(true)
+			mode(DEFAULT_MODE), roi1(NULL), roi2(NULL), live_update(true)
 		{}
 };
 
@@ -129,6 +131,11 @@ void update_matcher(ChData *data) {
 		stereo_bm->setPreFilterType(data->pre_filter_type);
 		stereo_bm->setTextureThreshold(data->texture_threshold);
 		stereo_bm->setUniquenessRatio(data->uniqueness_ratio);
+
+		if(data->roi1 != NULL && data->roi2 != NULL) {
+			stereo_bm->setROI1(*data->roi1);
+			stereo_bm->setROI2(*data->roi2);
+		}
 		break;
 
 	case SGBM:
@@ -672,38 +679,117 @@ int main(int argc, char *argv[]) {
 	char default_right_filename[] = "tsukuba/scene1.row3.col5.ppm";
 	char *left_filename = default_left_filename;
 	char *right_filename = default_right_filename;
-	int i;
-	int norm_width = 320;
-	int norm_height = 240;
+	char *extrinsics_filename = NULL;
+	char *intrinsics_filename = NULL;
 
 	GtkBuilder *builder;
 	GError *error = NULL;
 	ChData *data;
 
 	/* Parse arguments to find left and right filenames */
-	for (i = 1; i < argc; i++) {
+	//TODO: we should use some library to parse the command line arguments if we
+	//are going to use lots of them.
+	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-left") == 0) {
 			i++;
 			left_filename = argv[i];
 		} else if (strcmp(argv[i], "-right") == 0) {
 			i++;
 			right_filename = argv[i];
+		} else if (strcmp(argv[i], "-extrinsics") == 0) {
+			i++;
+			extrinsics_filename = argv[i];
+		} else if (strcmp(argv[i], "-intrinsics") == 0) {
+			i++;
+			intrinsics_filename = argv[i];
 		}
 	}
 
-	fprintf(stdout, "-left %s\n-right %s\n", left_filename, right_filename);
+	Mat left_image = imread(left_filename,1);
 
-	/* Init GTK+ */
-	gtk_init(&argc, &argv);
+	if(left_image.empty()) {
+		printf("Could not read left image %s.\n",left_filename);
+		exit(1);
+	}
+
+	Mat right_image = imread(right_filename,1);
+
+	if(right_image.empty()) {
+		printf("Could not read right image %s.\n",right_filename);
+		exit(1);
+	}
+
+	if(left_image.size() != right_image.size()) {
+		printf("Left and right images have different sizes.\n");
+		exit(1);
+	}
+
+	Mat gray_left, gray_right;
+	cvtColor(left_image,gray_left,CV_BGR2GRAY);
+	cvtColor(right_image,gray_right,CV_BGR2GRAY);
 
 	/* Create data */
 	data = new ChData();
 
+	if(intrinsics_filename != NULL && extrinsics_filename != NULL) {
+		FileStorage intrinsicsFs(intrinsics_filename,FileStorage::READ);
+
+		if(!intrinsicsFs.isOpened()) {
+			printf("Could not open intrinsic parameters file %s.\n", intrinsics_filename);
+			exit(1);
+		}
+
+		Mat m1, d1, m2, d2;
+		intrinsicsFs["M1"] >> m1;
+		intrinsicsFs["D1"] >> d1;
+		intrinsicsFs["M2"] >> m2;
+		intrinsicsFs["D2"] >> d2;
+
+		FileStorage extrinsicsFs(extrinsics_filename,FileStorage::READ);
+
+		if(!extrinsicsFs.isOpened()) {
+			printf("Could not open extrinsic parameters file %s.\n", extrinsics_filename);
+			exit(1);
+		}
+
+		printf("Using provided calibration files to undistort and rectify images.\n");
+
+		Mat r,t;
+		extrinsicsFs["R"] >> r;
+		extrinsicsFs["T"] >> t;
+
+		Mat r1,p1,r2,p2,q;
+		data->roi1 = new Rect();
+		data->roi2 = new Rect();
+		stereoRectify(m1,d1,m2,d2,left_image.size(),r,t,r1,r2,p1,p2,q,CALIB_ZERO_DISPARITY,-1,left_image.size(),data->roi1,data->roi2);
+
+		Mat map11, map12, map21, map22;
+		initUndistortRectifyMap(m1, d1, r1, p1, left_image.size(), CV_16SC2, map11, map12);
+		initUndistortRectifyMap(m2, d2, r2, p2, right_image.size(), CV_16SC2, map21, map22);
+
+		Mat remapped_left, remapped_right;
+		remap(gray_left, remapped_left, map11, map12, INTER_LINEAR);
+		remap(gray_right, remapped_right, map21, map22, INTER_LINEAR);
+
+		data->cv_image_left = remapped_left;
+		data->cv_image_right = remapped_right;
+
+		Mat color_remapped_left, color_remapped_right;
+		remap(left_image, color_remapped_left, map11, map12, INTER_LINEAR);
+		remap(right_image, color_remapped_right, map21, map22, INTER_LINEAR);
+		left_image = color_remapped_left;
+		right_image = color_remapped_right;
+	} else {
+		data->cv_image_left = gray_left;
+		data->cv_image_right = gray_right;
+	}
+
+	/* Init GTK+ */
+	gtk_init(&argc, &argv);
+
 	/* Create new GtkBuilder object */
 	builder = gtk_builder_new();
 
-	/* Load UI from file. If error occurs, report it and quit application.
-	 * Replace "tut.glade" with your saved project. */
 	if (!gtk_builder_add_from_file(builder, "StereoTuner.glade", &error)) {
 		g_warning("%s", error->message);
 		g_free(error);
@@ -750,12 +836,29 @@ int main(int argc, char *argv[]) {
 	data->adj_texture_threshold = GTK_ADJUSTMENT(gtk_builder_get_object(builder, "adj_texture_threshold"));
 	data->status_bar_context = gtk_statusbar_get_context_id(GTK_STATUSBAR(data->status_bar), "Statusbar context");
 
-	//Put images on place
-	gtk_image_set_from_file(data->image_left, left_filename);
-	gtk_image_set_from_file(data->image_right, right_filename);
+	//Put images in place:
+	//gtk_image_set_from_file(data->image_left, left_filename);
+	//gtk_image_set_from_file(data->image_right, right_filename);
 
-	data->cv_image_left = imread(left_filename,0);
-	data->cv_image_right = imread(right_filename,0);
+	Mat leftRGB, rightRGB;
+	cvtColor(left_image, leftRGB,
+			CV_BGR2RGB);
+	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(
+			(guchar*) leftRGB.data, GDK_COLORSPACE_RGB, false,
+			8, leftRGB.cols,
+			leftRGB.rows, leftRGB.step,
+			NULL, NULL);
+	gtk_image_set_from_pixbuf(data->image_left, pixbuf);
+
+	cvtColor(right_image, rightRGB,
+			CV_BGR2RGB);
+	pixbuf = gdk_pixbuf_new_from_data(
+			(guchar*) rightRGB.data, GDK_COLORSPACE_RGB, false,
+			8, rightRGB.cols,
+			rightRGB.rows, rightRGB.step,
+			NULL, NULL);
+	gtk_image_set_from_pixbuf(data->image_right, pixbuf);
+
 	update_matcher(data);
 
 	/* Connect signals */
