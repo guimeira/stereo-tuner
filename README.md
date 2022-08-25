@@ -16,14 +16,16 @@ This is a simple little GTK application that can be used to tune parameters for 
 - **Undistortion and rectification:** use your calibration files to undistort and rectify images.
 
 ## Installation
-Make sure you have GTK3.0, GModule2.0 and OpenCV3.0 installed on your system, as well as a C++ compiler. Then, execute the following:
+Make sure you have GTK3.0, GModule2.0 and OpenCV4+ installed on your system, as well as a C++ compiler. Then, execute the following:
 
     wget https://github.com/guimeira/stereo-tuner/releases/download/v0.3/stereo-tuner.tar.gz
     tar zxvf stereo-tuner.tar.gz
     cd StereoTuner
     make
     ./main
-    
+
+If you have built OpenCV from source code, check that the OPENCV_GENERATE_PKGCONFIG Cmake flag is enabled.
+
 ## Usage
 The user interface should be very intuitive, all you have to do is to adjust the parameters and see the resulting disparity image instantly.
 

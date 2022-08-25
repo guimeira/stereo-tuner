@@ -197,9 +197,9 @@ void update_matcher(ChData *data) {
 	g_free(status_message);
 
 	normalize(data->cv_image_disparity, data->cv_image_disparity_normalized, 0,
-			255, CV_MINMAX, CV_8UC1);
+			255, cv::NORM_MINMAX, CV_8UC1);
 	cvtColor(data->cv_image_disparity_normalized, data->cv_color_image,
-			CV_GRAY2RGB);
+			cv::COLOR_GRAY2RGB);
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(
 			(guchar*) data->cv_color_image.data, GDK_COLORSPACE_RGB, false,
 			8, data->cv_color_image.cols,
@@ -725,8 +725,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	Mat gray_left, gray_right;
-	cvtColor(left_image,gray_left,CV_BGR2GRAY);
-	cvtColor(right_image,gray_right,CV_BGR2GRAY);
+	cvtColor(left_image,gray_left,cv::COLOR_BGR2GRAY);
+	cvtColor(right_image,gray_right,cv::COLOR_BGR2GRAY);
 
 	/* Create data */
 	data = new ChData();
@@ -842,7 +842,7 @@ int main(int argc, char *argv[]) {
 
 	Mat leftRGB, rightRGB;
 	cvtColor(left_image, leftRGB,
-			CV_BGR2RGB);
+			cv::COLOR_BGR2RGB);
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(
 			(guchar*) leftRGB.data, GDK_COLORSPACE_RGB, false,
 			8, leftRGB.cols,
@@ -851,7 +851,7 @@ int main(int argc, char *argv[]) {
 	gtk_image_set_from_pixbuf(data->image_left, pixbuf);
 
 	cvtColor(right_image, rightRGB,
-			CV_BGR2RGB);
+			cv::COLOR_BGR2RGB);
 	pixbuf = gdk_pixbuf_new_from_data(
 			(guchar*) rightRGB.data, GDK_COLORSPACE_RGB, false,
 			8, rightRGB.cols,
