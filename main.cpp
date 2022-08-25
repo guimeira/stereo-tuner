@@ -681,6 +681,7 @@ int main(int argc, char *argv[]) {
 	char *right_filename = default_right_filename;
 	char *extrinsics_filename = NULL;
 	char *intrinsics_filename = NULL;
+	bool enable_resize = false;
 
 	GtkBuilder *builder;
 	GError *error = NULL;
@@ -702,6 +703,9 @@ int main(int argc, char *argv[]) {
 		} else if (strcmp(argv[i], "-intrinsics") == 0) {
 			i++;
 			intrinsics_filename = argv[i];
+		} else if (strcmp(argv[i], "-resize") == 0) {
+			i++;
+			enable_resize = true;
 		}
 	}
 
@@ -722,6 +726,15 @@ int main(int argc, char *argv[]) {
 	if(left_image.size() != right_image.size()) {
 		printf("Left and right images have different sizes.\n");
 		exit(1);
+	}
+
+	// Resize
+	if (enable_resize)
+	{
+		int down_width = 640; // 384;
+		int down_height = 480; //288;
+		cv::resize(left_image, left_image, Size(down_width, down_height), INTER_LINEAR);
+		cv::resize(right_image, right_image, Size(down_width, down_height), INTER_LINEAR);
 	}
 
 	Mat gray_left, gray_right;
